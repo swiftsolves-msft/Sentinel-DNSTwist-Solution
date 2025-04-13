@@ -1,0 +1,37 @@
+fuzzer,domain,dns_a,dns_mx,dns_ns,geoip
+*original,ohiohealth.com,217.114.85.70,ohiohealth-com.mail.protection.outlook.com,ns3.level3.net,Sweden
+addition,ohiohealthy.com,66.223.49.29,ohiohealthy.com,delta1.kc.epik.com,United States
+bitsquatting,oliohealth.com,15.197.148.33,mailstore1.secureserver.net,ns63.domaincontrol.com,United States
+bitsquatting,oxiohealth.com,15.197.225.128,,ns59.domaincontrol.com,United States
+dictionary,myohiohealth.com,103.224.182.218,park-mx.above.com,ns1.abovedomains.com,Australia
+dictionary,wwwohiohealth.com,,,ns1.secure32.com,
+hyphenation,ohio-health.com,162.214.203.27,ohiohealth-com01b.mail.protection.outlook.com,ns29.worldnic.com,United States
+insertion,ohbiohealth.com,152.42.162.230,mailstore1.secureserver.net,ns45.domaincontrol.com,United States
+omission,ohiohealh.com,103.224.182.244,park-mx.above.com,581.ns1.abovedomains.com,Australia
+omission,ohiohealt.com,103.224.182.244,park-mx.above.com,581.ns1.abovedomains.com,Australia
+omission,ohioheath.com,104.247.81.170,,ns1.parkingcrew.net,Canada
+omission,hiohealth.com,13.248.169.48,,ns3.afternic.com,United States
+omission,ohohealth.com,13.248.169.48,,ns3.afternic.com,United States
+omission,oiohealth.com,13.248.169.48,,ns3.afternic.com,United States
+omission,ohihealth.com,15.197.148.33,,ns07.domaincontrol.com,United States
+omission,ohiohelth.com,69.162.80.57,mail.h-email.net,ns1.hastydns.com,United States
+plural,ohioshealth.com,18.119.154.66,,nsg1.namebrightdns.com,United States
+repetition,ohiohhealth.com,104.247.81.171,,ns1.parkingcrew.net,Canada
+repetition,ohioheallth.com,104.247.81.173,,ns1.parkingcrew.net,Canada
+replacement,ohiohealrh.com,104.247.81.173,,ns1.parkingcrew.net,Canada
+replacement,ohiihealth.com,204.74.99.100,,pdns1.ultradns.net,United States
+replacement,obiohealth.com,,,dns29.hichina.com,
+replacement,ohioheakth.com,,,dns1.hichina.com,
+replacement,ohiohealtg.com,,,ns1.parkingcrew.net,
+replacement,ohioheslth.com,,,ns1.parkingcrew.net,
+replacement,ohiohralth.com,,,ns1.parkingcrew.net,
+subdomain,o.hiohealth.com,13.248.169.48,,ns3.afternic.com,United States
+subdomain,ohioh.ealth.com,173.255.194.134,,,United States
+subdomain,ohiohe.alth.com,173.255.194.134,mail.mailerhost.net,ns1.mytrafficmanagement.com,United States
+tld-swap,ohiohealth.co,103.224.182.244,park-mx.above.com,581.ns1.abovedomains.com,Australia
+tld-swap,ohiohealth.info,15.197.225.128,ohiohealth-info.mail.protection.outlook.com,ns63.domaincontrol.com,United States
+tld-swap,ohiohealth.net,15.197.225.128,,ns05.domaincontrol.com,United States
+tld-swap,ohiohealth.org,15.197.225.128,,ns05.domaincontrol.com,United States
+transposition,ohioheatlh.com,172.233.219.123,mx156.hostedmxserver.com,ns1.ii50.parklogic.com,United States
+transposition,ohiohelath.com,69.162.80.55,mail.h-email.net,ns1.hastydns.com,United States
+vowel-swap,ohiahealth.com,13.248.243.5,,ns37.domaincontrol.com,United States

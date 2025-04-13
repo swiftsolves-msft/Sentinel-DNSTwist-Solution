@@ -1,0 +1,393 @@
+openapi: 3.0.3
+info:
+  title: DNSTwist Web API
+  description: API for initiating and managing domain permutation scans using DNSTwist.
+  version: 1.0.0
+servers:
+  - url: http://{IPAddress}:8000
+    description: Local server
+    variables:
+      IPAddress:
+        default: localhost
+        description: IP address or hostname of the server
+paths:
+  /api/scans:
+    post:
+      summary: Start a new domain scan
+      description: Initiates a scan for domain permutations based on the provided URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  example: ohiohealth.com
+                  description: The URL or domain to scan for permutations.
+      responses:
+        '201':
+          description: Scan started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+              example:
+                complete: 11
+                domain: ohiohealth.com
+                id: 7cd35a84-ba45-49d1-8525-7ea89d4f2240
+                registered: 0
+                remaining: 7717
+                timestamp: 1744521668
+                total: 7728
+                url: http://ohiohealth.com
+        '400':
+          description: Invalid request (e.g., missing URL, invalid domain, domain too long, or blocked)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Bad request
+        '500':
+          description: Too many active scan sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Too many scan sessions - please retry in a minute
+  /api/scans/{sid}:
+    get:
+      summary: Get scan status
+      description: Retrieves the status of a scan by its session ID.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: Scan status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+              example:
+                complete: 6946
+                domain: ohiohealth.com
+                id: 7cd35a84-ba45-49d1-8525-7ea89d4f2240
+                registered: 33
+                remaining: 782
+                timestamp: 1744521668
+                total: 7728
+                url: http://ohiohealth.com
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+  /api/scans/{sid}/domains:
+    get:
+      summary: Get scan domains
+      description: Retrieves the list of domains found in the scan.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: List of domains retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainResult'
+              example:
+                - dns_a:
+                    - 15.197.148.33
+                  dns_mx:
+                    - mailstore1.secureserver.net
+                  dns_ns:
+                    - ns63.domaincontrol.com
+                  domain: oliohealth.com
+                  fuzzer: bitsquatting
+                  geoip: United States
+                - dns_a:
+                    - 13.248.169.48
+                  dns_mx:
+                    - ""
+                  dns_ns:
+                    - ns3.afternic.com
+                  domain: oiohealth.com
+                  fuzzer: omission
+                  geoip: United States
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+  /api/scans/{sid}/csv:
+    get:
+      summary: Download scan results as CSV
+      description: Downloads the scan results in CSV format.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: CSV file containing scan results
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+              example: |
+                domain,fuzzer,dns_a,dns_mx,dns_ns,geoip
+                oliohealth.com,bitsquatting,"15.197.148.33","mailstore1.secureserver.net","ns63.domaincontrol.com","United States"
+                oiohealth.com,omission,"13.248.169.48","","ns3.afternic.com","United States"
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Specifies the filename
+              example: attachment; filename=dnstwist.csv
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+  /api/scans/{sid}/json:
+    get:
+      summary: Download scan results as JSON
+      description: Downloads the scan results in JSON format.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: JSON file containing scan results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainResult'
+              example:
+                - dns_a:
+                    - 15.197.148.33
+                  dns_mx:
+                    - mailstore1.secureserver.net
+                  dns_ns:
+                    - ns63.domaincontrol.com
+                  domain: oliohealth.com
+                  fuzzer: bitsquatting
+                  geoip: United States
+                - dns_a:
+                    - 13.248.169.48
+                  dns_mx:
+                    - ""
+                  dns_ns:
+                    - ns3.afternic.com
+                  domain: oiohealth.com
+                  fuzzer: omission
+                  geoip: United States
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Specifies the filename
+              example: attachment; filename=dnstwist.json
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+  /api/scans/{sid}/list:
+    get:
+      summary: Download scan results as plain text
+      description: Downloads the scan results in plain text format.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: Plain text file containing scan results
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                oliohealth.com
+                oiohealth.com
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Specifies the filename
+              example: attachment; filename=dnstwist.txt
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+  /api/scans/{sid}/stop:
+    post:
+      summary: Stop a scan
+      description: Stops a running scan by its session ID.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The session ID of the scan
+      responses:
+        '200':
+          description: Scan stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {}
+        '404':
+          description: Scan session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Scan session not found
+components:
+  schemas:
+    ScanStatus:
+      type: object
+      properties:
+        complete:
+          type: integer
+          description: Number of permutations scanned
+          example: 6946
+        domain:
+          type: string
+          description: The domain being scanned
+          example: ohiohealth.com
+        id:
+          type: string
+          format: uuid
+          description: Unique session ID
+          example: 7cd35a84-ba45-49d1-8525-7ea89d4f2240
+        registered:
+          type: integer
+          description: Number of registered domains found
+          example: 33
+        remaining:
+          type: integer
+          description: Number of permutations left to scan
+          example: 782
+        timestamp:
+          type: integer
+          description: Unix timestamp of scan start
+          example: 1744521668
+        total:
+          type: integer
+          description: Total number of permutations to scan
+          example: 7728
+        url:
+          type: string
+          description: The URL provided for scanning
+          example: http://ohiohealth.com
+      required:
+        - complete
+        - domain
+        - id
+        - registered
+        - remaining
+        - timestamp
+        - total
+        - url
+    DomainResult:
+      type: object
+      properties:
+        dns_a:
+          type: array
+          items:
+            type: string
+          description: List of A records (IP addresses)
+          example: ["15.197.148.33"]
+        dns_mx:
+          type: array
+          items:
+            type: string
+          description: List of MX records
+          example: ["mailstore1.secureserver.net"]
+        dns_ns:
+          type: array
+          items:
+            type: string
+          description: List of NS records
+          example: ["ns63.domaincontrol.com"]
+        domain:
+          type: string
+          description: The permuted domain
+          example: oliohealth.com
+        fuzzer:
+          type: string
+          description: The permutation technique used
+          example: bitsquatting
+        geoip:
+          type: string
+          description: Geolocation of the domain's server
+          example: United States
+      required:
+        - domain
+        - fuzzer
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+      required:
+        - message
