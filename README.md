@@ -16,8 +16,8 @@ The following solution will contain the following
  4. Create a LogicApp that reads the EASM Domain Inventory Data or KQL Query Log Analytics workspace `EasmAsset_CL | where AssetType_s contains "Domain"` for new domains and loads them into DNSTwist, then uses the DNSTwist APIs to generate lists of domain name fuzzing to look for, and export those lists into a Sentinel Watchlist.
  5. A Sentinel Analytic Rule using IM Parsers to match in DNSTwist Domains ?
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fswiftsolves-msft%2Fmaster%2FSentinel-DNSTwist-Solution%2Fazuredeploy.json)
-[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fswiftsolves-msft%2Fmaster%2FSentinel-DNSTwist-Solution%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2Fmaster%2FSentinel-DNSTwist-Solution%2Fazuredeploy.json)
+[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2Fmaster%2FSentinel-DNSTwist-Solution%2Fazuredeploy.json)
 
 **Additional Post Install Notes:**
 
