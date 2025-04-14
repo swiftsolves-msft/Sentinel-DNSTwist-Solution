@@ -17,7 +17,7 @@ The following solution will contain the following
  5. A Sentinel Analytic Rule using IM Parsers to match in DNSTwist Domains ?
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
-[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2Fmaster%2FSentinel-DNSTwist-Solution%2Fazuredeploy.json)
+[![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
 
 **Additional Post Install Notes:**
 
