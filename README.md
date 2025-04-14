@@ -45,3 +45,4 @@ In Defender EASM  - Data connections blade - add a connection to the newly creat
 | vowel-swap       | Replaces a vowel with another vowel (e.g., "google" to "guugle").                |
 | insertion        | Inserts a single character into the domain (e.g., "google" to "googgle").        |
 | addition         | Appends a character to the domain (e.g., "google" to "googlea").                 |
+| various          | Combines multiple techniques for miscellaneous domain variations (e.g., "google" to "g0og1e"). |
