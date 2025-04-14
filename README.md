@@ -1,4 +1,7 @@
 # Sentinel DNSTwist Solution
+
+### *Work in Progress - final solution and steps may be different*
+
 The following solution was inspired from reading Don Murdoch's Blue Team Handbook and coming across DNS Twist Algorithim and the amazing work and software written by Marcin Ulikowski
 
 [Research from Blue Team Handbook by Don Murdoch](https://www.amazon.com/Blue-Team-Handbook-Condensed-Operations/dp/1091493898/)
