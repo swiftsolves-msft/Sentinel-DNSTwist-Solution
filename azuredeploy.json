@@ -17,13 +17,29 @@
           "description": "Name for the EASM Workspace"
         }
       },
+        "PlaybookName": {
+            "defaultValue": "Update-DNSTwistWatchList",
+            "type": "string"
+      },
       "SentinelWorkspaceName": {
         "type": "string",
-        "defaultValue": "CUSTOMERNAMEHERE",
+        "defaultValue": "Sentinel Workspace Name",
         "metadata": {
           "description": "Name of your existing Sentinel workspace. This is where the watchlist will be created."
         }
       },
+        "SentinelWorkspaceId": {
+            "defaultValue": "Sentinel Workspace Id",
+            "type": "string"
+        },
+        "SentinelWorkspaceRGName": {
+            "defaultValue": "Sentinel Resource Group Name",
+            "type": "string"
+        },
+        "SentinelWorkspaceSubscriptionId": {
+            "defaultValue": "Sentinel Azure Subscription Id",
+            "type": "string"
+        },
         "DockerUser": {
             "defaultValue": "someone@domain.com",
             "type": "String",
@@ -85,19 +101,397 @@
         }
       }
     },
+    "variables": {
+        "AzureSentinelConnectionName": "[concat('azuresentinel-', parameters('PlaybookName'))]",
+        "azuremonitorlogsConnectionName": "[concat('azuremonitorlogs-', parameters('PlaybookName'))]"
+    },
     "resources": [
-      {
-        "type": "Microsoft.OperationalInsights/workspaces",
-        "apiVersion": "2021-06-01",
-        "name": "[concat(parameters('name'), '-loganalytics')]",
-        "location": "[parameters('location')]",
-        "properties": {
-          "sku": {
-            "name": "PerGB2018"
-          },
-          "retentionInDays": 30
-        }
-      },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[variables('AzureSentinelConnectionName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "[parameters('PlaybookName')]",
+                "parameterValueType": "Alternative",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuresentinel')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[variables('azuremonitorlogsConnectionName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "[parameters('PlaybookName')]",
+        		"parameterValueSet": {
+            		"name": "managedIdentityAuth",
+            		"values": {}
+        		},
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuremonitorlogs')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('PlaybookName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', variables('AzureSentinelConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('azuremonitorlogsConnectionName'))]",
+                "[resourceId('Microsoft.ContainerInstance/containerGroups', parameters('name'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "ipAddr": {
+                            //"defaultValue": "AzureContainerInstanceIpAddr",
+                            "defaultValue": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups', parameters('name'))).ipAddress.ip]",
+                            "type": "String"
+                        },
+                        "subId": {
+                            "defaultValue": "[parameters('SentinelWorkspaceSubscriptionId')]",
+                            "type": "String"
+                        },
+                        "rgName": {
+                            "defaultValue": "[parameters('SentinelWorkspaceRGName')]",
+                            "type": "String"
+                        },
+                        "workspaceID": {
+                            "defaultValue": "[parameters('SentinelWorkspaceId')]",
+                            "type": "String"
+                        },
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "interval": 1,
+                                "frequency": "Week",
+                                "timeZone": "Eastern Standard Time",
+                                "schedule": {
+                                    "weekDays": [
+                                        "Monday"
+                                    ],
+                                    "hours": [
+                                        8
+                                    ]
+                                }
+                            },
+                            "evaluatedRecurrence": {
+                                "interval": 1,
+                                "frequency": "Week",
+                                "timeZone": "Eastern Standard Time",
+                                "schedule": {
+                                    "weekDays": [
+                                        "Monday"
+                                    ],
+                                    "hours": [
+                                        8
+                                    ]
+                                }
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Run_query_and_list_results_V2_(Preview)": {
+                            "runAfter": {
+                                "SID_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "body": {
+                                    "query": "EasmAsset_CL | where AssetType_s contains \"Domain\" | where SnapshotDateTime_t >= ago(7d) | project AssetName_s",
+                                    "timerangetype": "2",
+                                    "timerange": {
+                                        "relativeTimeRange": "Set in query"
+                                    }
+                                },
+                                "path": "/queryDataV2",
+                                "queries": {
+                                    "subscriptions": "[parameters('SentinelWorkspaceSubscriptionId')]",
+                                    "resourcegroups": "[parameters('SentinelWorkspaceRGName')]",
+                                    "resourcetype": "Log Analytics Workspace",
+                                    "resourcename": "[parameters('SentinelWorkspaceName')]"
+                                }
+                            }
+                        },
+                        "For_each": {
+                            "foreach": "@variables('domainarray')",
+                            "actions": {
+                                "Until": {
+                                    "actions": {
+                                        "Check_Domain_Scan": {
+                                            "type": "Http",
+                                            "inputs": {
+                                                "uri": "@{variables('baseAPI')}/scans/@{variables('SID')}",
+                                                "method": "GET"
+                                            },
+                                            "runtimeConfiguration": {
+                                                "contentTransfer": {
+                                                    "transferMode": "Chunked"
+                                                }
+                                            }
+                                        },
+                                        "Set_remain": {
+                                            "runAfter": {
+                                                "Check_Domain_Scan": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "remain",
+                                                "value": "@body('Check_Domain_Scan')?['remaining']"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Set_SID": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "expression": "@equals(variables('remain'),0)",
+                                    "limit": {
+                                        "count": 60,
+                                        "timeout": "PT1H"
+                                    },
+                                    "type": "Until"
+                                },
+                                "Start_Domain_Scan": {
+                                    "type": "Http",
+                                    "inputs": {
+                                        "uri": "@{variables('baseAPI')}/scans",
+                                        "method": "POST",
+                                        "body": {
+                                            "url": "@{items('For_each')?['AssetName_s']}"
+                                        }
+                                    },
+                                    "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                            "transferMode": "Chunked"
+                                        }
+                                    }
+                                },
+                                "Set_SID": {
+                                    "runAfter": {
+                                        "Start_Domain_Scan": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "SID",
+                                        "value": "@body('Start_Domain_Scan')?['id']"
+                                    }
+                                },
+                                "GET_Domains": {
+                                    "runAfter": {
+                                        "Until": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Http",
+                                    "inputs": {
+                                        "uri": "@{variables('baseAPI')}/scans/@{variables('SID')}/domains\n\n",
+                                        "method": "GET"
+                                    },
+                                    "runtimeConfiguration": {
+                                        "contentTransfer": {
+                                            "transferMode": "Chunked"
+                                        }
+                                    }
+                                },
+                                "Set_remain_9000": {
+                                    "runAfter": {
+                                        "DNSTwistDomains": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "remain",
+                                        "value": 9000
+                                    },
+                                    "description": "Power level is over 9000 it can't be"
+                                },
+                                "Set_SID_null": {
+                                    "runAfter": {
+                                        "Set_remain_9000": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "SID",
+                                        "value": "@null"
+                                    }
+                                },
+                                "DNSTwistDomains": {
+                                    "foreach": "@body('GET_Domains')",
+                                    "actions": {
+                                        "Watchlists_-_Add_a_new_Watchlist_Item": {
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "put",
+                                                "body": {
+                                                    "fuzzer": "@{items('DnstwistDomains')?['fuzzer']}",
+                                                    "domain": "@{items('DnstwistDomains')?['domain']}",
+                                                    "dns_a": "@{items('DnstwistDomains')?['dns_a']}",
+                                                    "dns_mx": "@{items('DnstwistDomains')?['dns_mx']}",
+                                                    "dns_ns": "@{items('DnstwistDomains')?['dns_ns']}",
+                                                    "geoip": "@{items('DnstwistDomains')?['geoip']}"
+                                                },
+                                                "path": "/Watchlists/subscriptions/@{encodeURIComponent(parameters('subId'))}/resourceGroups/@{encodeURIComponent(parameters('rgName'))}/workspaces/@{encodeURIComponent(parameters('workspaceID'))}/watchlists/@{encodeURIComponent('DNSTwist')}/watchlistItem"
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "GET_Domains": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                }
+                            },
+                            "runAfter": {
+                                "domainarray_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach",
+                            "runtimeConfiguration": {
+                                "concurrency": {
+                                    "repetitions": 1
+                                }
+                            }
+                        },
+                        "domainarray_variable": {
+                            "runAfter": {
+                                "Run_query_and_list_results_V2_(Preview)": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "domainarray",
+                                        "type": "array",
+                                        "value": "@body('Run_query_and_list_results_V2_(Preview)')?['value']"
+                                    }
+                                ]
+                            }
+                        },
+                        "baseAPI_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "baseAPI",
+                                        "type": "string",
+                                        "value": "http://@{parameters('IpAddr')}:8000/api"
+                                    }
+                                ]
+                            }
+                        },
+                        "SID_variable": {
+                            "runAfter": {
+                                "remain_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "SID",
+                                        "type": "string",
+                                        "value": "@null"
+                                    }
+                                ]
+                            }
+                        },
+                        "remain_variable": {
+                            "runAfter": {
+                                "baseAPI_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "remain",
+                                        "type": "integer",
+                                        "value": "@null"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azuremonitorlogs": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', variables('azuremonitorlogsConnectionName'))]",
+                                "connectionName": "[variables('azuremonitorlogsConnectionName')]",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuremonitorlogs')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            },
+                            "azuresentinel": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', variables('AzureSentinelConnectionName'))]",
+                                "connectionName": "[variables('AzureSentinelConnectionName')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                },
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuresentinel')]"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         {
         "name": "[concat(parameters('SentinelworkspaceName'), '/Microsoft.SecurityInsights/DNSTwist')]",
         "type": "Microsoft.OperationalInsights/workspaces/providers/Watchlists",
@@ -113,7 +507,7 @@
             "defaultDuration": "P1000Y",
             "contentType": "Text/Csv",
             "numberOfLinesToSkip": 0,
-            "itemsSearchKey": "domainName",
+            "itemsSearchKey": "domain",
             "rawContent": "fuzzer,domain,dns_a,dns_mx,dns_ns,geoip\r\n0 ,*original ,test.com ,1.1.1.1,test-com.mail.protection.outlook.com ,ns3.level3.net, United States\r\n"       
         },
         "apiVersion": "2022-08-01"
