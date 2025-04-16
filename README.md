@@ -13,6 +13,8 @@ The following solution will contain the following
  3. Create a Sentinel Watchlist DNSTwist
  4. Create a LogicApp that reads the EASM Domain Inventory Data you export to Log Analytics workspace `EasmAsset_CL | where AssetType_s contains "Domain"` for new domains, then uses the DNSTwist API to generate lists of domain name fuzzing to look for, and export those lists into a Sentinel Watchlist.
 
+Note: Deploy to the same resource group as Microsoft Sentinel.
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
 [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
 
