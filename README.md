@@ -6,12 +6,12 @@ The following solution was inspired from reading Don Murdoch's Blue Team Handboo
 
 [The DNSTwist GitHub Repository by Marcin Ulikowski](https://github.com/elceef/dnstwist?tab=readme-ov-file)
 
-The following solution will contain the following
+The following solution deploys the following
 
- 1. Create a Defender EASM workspace
- 2. Create a Azure Container Instance using DNSTwist WebApp Docker image
- 3. Create a Sentinel Watchlist DNSTwist
- 4. Create a LogicApp that reads the EASM Domain Inventory Data you export to Log Analytics workspace `EasmAsset_CL | where AssetType_s contains "Domain"` for new domains, then uses the DNSTwist API to generate lists of domain name fuzzing to look for, and export those lists into a Sentinel Watchlist.
+ 1. Defender EASM workspace (30 day trial)
+ 2. Azure Container Instance using DNSTwist WebApp Docker image
+ 3. Sentinel Watchlist DNSTwist
+ 4. LogicApp that reads the EASM Domain Inventory Data you export to Log Analytics workspace `EasmAsset_CL | where AssetType_s contains "Domain"` for new domains, then uses the DNSTwist API to generate lists of domain name fuzzing to look for, and export those lists into a Sentinel Watchlist.
 
 Note: Deploy to the same resource group as Microsoft Sentinel.
 
