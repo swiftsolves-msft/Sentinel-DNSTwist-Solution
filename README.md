@@ -18,7 +18,13 @@ The following solution will contain the following
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
 [![Deploy to Azure Gov](https://aka.ms/deploytoazuregovbutton)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fswiftsolves-msft%2FSentinel-DNSTwist-Solution%2Frefs%2Fheads%2Fmain%2Fazuredeploy.json)
 
-**Additional Post Install Notes:**
+## Additional Post Install Notes:
+
+***Defender EASM Setup:***
+
+In Defender EASM  - Data connections blade - add a connection to your existing Sentinel workspace. Set frequency **weekly** and schedule reoccurring on **Sunday**. Logic App runs the next day on Monday. For content you can choose **asset data** at a minimum.
+
+***Update-DNSTwistWatchList***
 
 Authorize the web.connection APIs deployed into the ResourceGroup.
 
@@ -26,7 +32,18 @@ The Logic App creates and uses a Managed System Identity (MSI) to update the Azu
 
 Assign RBAC 'Azure Sentinel Contributor' role to the Logic App at the Resource Group level of the Log Analytics Workspace.
 
-In Defender EASM  - Data connections blade - add a connection to the newly create log analytics workspace. Set frequency **weekly** and schedule reoccurring on **Sunday**. Logic App runs the next day on Monday. For content you can choose **asset data** at a minimum.
+***Microsoft Sentinel***
+
+Be sure to look into threat hunting scenarios against your Firewall, Network Flow, DNS, and Proxy Logs. As an example using the VMConnection table from VMInsights Solution installed on Azure or Arc Connected servers:
+
+    let DNSTwistDomains = _GetWatchlist('DNSTwist')
+	    | where fuzzer != "*original" //and TimeGenerated >= ago(30d)
+	    | project domain;
+    VMConnection
+	    | where TimeGenerated >= ago(7d)
+	    | extend DstDomain = iff(isnotempty(RemoteDnsQuestions), tostring(parse_json(RemoteDnsQuestions)[0]), "")
+	    | where isnotempty(DstDomain) and DstDomain in~ (DNSTwistDomains)
+	    | summarize Count = count(), Domains = make_set(DstDomain) by Computer, ProcessName, SourceIp, DestinationIp, DestinationPort, RemoteCountry
 
 ## Fuzzers used
 
